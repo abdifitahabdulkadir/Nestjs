@@ -21,9 +21,9 @@ import { UsersService } from "./users.service.js";
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
-  // means it makes throlltling enabled for this route
-  // because we have disabled in controller level.
-  @SkipThrottle({ default: true })
+  // becasue w disabled it in controller level.( default:true)
+  // so we need to enable it for this route.
+  @SkipThrottle({ default: false })
   @Get()
   getUsers(@Query("role") role?: "admin" | "maanger" | "interns" | "engineer") {
     return this.userService.getAllUsers(role);

@@ -43,7 +43,7 @@ let UsersController = class UsersController {
 };
 exports.UsersController = UsersController;
 __decorate([
-    (0, throttler_1.SkipThrottle)({ default: true }),
+    (0, throttler_1.SkipThrottle)({ default: false }),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)("role")),
     __metadata("design:type", Function),
