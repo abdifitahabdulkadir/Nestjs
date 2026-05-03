@@ -8,17 +8,43 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
-const app_controller_1 = require("./app.controller");
-const app_service_1 = require("./app.service");
-const users_module_1 = require("./users/users.module");
+const core_1 = require("@nestjs/core");
+const throttler_1 = require("@nestjs/throttler");
+const app_controller_js_1 = require("./app.controller.js");
+const app_service_js_1 = require("./app.service.js");
+const database_module_js_1 = require("./database/database.module.js");
+const users_module_js_1 = require("./users/users.module.js");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [users_module_1.UsersModule],
-        controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
+        imports: [
+            users_module_js_1.UsersModule,
+            database_module_js_1.DatabaseModule,
+            throttler_1.ThrottlerModule.forRoot({
+                throttlers: [
+                    {
+                        ttl: 1000,
+                        limit: 3,
+                        name: "short",
+                    },
+                    {
+                        ttl: 60000,
+                        limit: 180,
+                        name: "long",
+                    },
+                ],
+            }),
+        ],
+        controllers: [app_controller_js_1.AppController],
+        providers: [
+            app_service_js_1.AppService,
+            {
+                provide: core_1.APP_GUARD,
+                useClass: throttler_1.ThrottlerGuard,
+            },
+        ],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

@@ -14,8 +14,9 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
-const users_dto_1 = require("./users.dto");
-const users_service_1 = require("./users.service");
+const throttler_1 = require("@nestjs/throttler");
+const client_1 = require("@prisma/client");
+const users_service_js_1 = require("./users.service.js");
 let UsersController = class UsersController {
     userService;
     constructor(userService) {
@@ -42,6 +43,7 @@ let UsersController = class UsersController {
 };
 exports.UsersController = UsersController;
 __decorate([
+    (0, throttler_1.SkipThrottle)({ default: true }),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)("role")),
     __metadata("design:type", Function),
@@ -55,6 +57,12 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findInterns", null);
 __decorate([
+    (0, throttler_1.Throttle)({
+        short: {
+            limit: 2,
+            ttl: 1000,
+        },
+    }),
     (0, common_1.Get)(":id"),
     __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),
     __metadata("design:type", Function),
@@ -66,7 +74,7 @@ __decorate([
     __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)(common_1.ValidationPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, users_dto_1.UpdateUserDTO]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateUser", null);
 __decorate([
@@ -80,11 +88,12 @@ __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)(common_1.ValidationPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [users_dto_1.CreateUserDTO]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "createUser", null);
 exports.UsersController = UsersController = __decorate([
+    (0, throttler_1.SkipThrottle)(),
     (0, common_1.Controller)("users"),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
+    __metadata("design:paramtypes", [users_service_js_1.UsersService])
 ], UsersController);
 //# sourceMappingURL=users.controller.js.map

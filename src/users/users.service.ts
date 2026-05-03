@@ -1,88 +1,44 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateUserDTO, UpdateUserDTO } from "./users.dto";
+import { Prisma } from "@prisma/client";
+import { DatabaseService } from "src/database/database.service";
 
 @Injectable()
 export class UsersService {
-  private users = [
-    {
-      id: 1,
-      name: "Amina Yusuf",
-      email: "amina.yusuf@example.com",
-      role: "admin",
-    },
-    {
-      id: 2,
-      name: "Daniel Kim",
-      email: "daniel.kim@example.com",
-      role: "engineer",
-    },
-    {
-      id: 3,
-      name: "Sophia Martinez",
-      email: "sophia.martinez@example.com",
-      role: "manager",
-    },
-    {
-      id: 4,
-      name: "Omar Hassan",
-      email: "omar.hassan@example.com",
-      role: "engineer",
-    },
-    {
-      id: 5,
-      name: "Priya Nair",
-      email: "priya.nair@example.com",
-      role: "admin",
-    },
-    {
-      id: 6,
-      name: "Ethan Brown",
-      email: "ethan.brown@example.com",
-      role: "manager",
-    },
-    {
-      id: 7,
-      name: "Linh Nguyen",
-      email: "linh.nguyen@example.com",
-      role: "interns",
-    },
-    {
-      id: 8,
-      name: "Grace Okafor",
-      email: "grace.okafor@example.com",
-      role: "manager",
-    },
-    {
-      id: 9,
-      name: "Noah Wilson",
-      email: "noah.wilson@example.com",
-      role: "interns",
-    },
-    {
-      id: 10,
-      name: "Fatima Ali",
-      email: "fatima.ali@example.com",
-      role: "admin",
-    },
-  ];
+  constructor(private readonly db: DatabaseService) {}
 
-  getAllUsers(role?: "admin" | "maanger" | "interns" | "engineer") {
-    if (role) {
-      const foundUesrs = this.users.filter(
-        (eachUser) => eachUser.role === role,
-      );
-      if (foundUesrs.length !== 0) return foundUesrs;
-      throw new NotFoundException("Users with given Role  are not found");
-    }
-    return this.users;
+  async getAllUsers(role?: "admin" | "maanger" | "interns" | "engineer") {
+    const foundUesrs = await this.db.employee.findMany({
+      where: {
+        ...(role && { role: role as Prisma.EmployeeCreateInput["role"] }),
+        role: role as Prisma.EmployeeCreateInput["role"],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+    if (foundUesrs.length !== 0) return foundUesrs;
+    throw new NotFoundException("Users with given Role  are not found");
   }
 
-  findInterns() {
-    return this.users.filter((eachUser) => eachUser.role === "interns");
+  async findInterns() {
+    const foundUesrs = await this.db.employee.findMany({
+      where: {
+        role: "interns" as Prisma.EmployeeCreateInput["role"],
+      },
+    });
+    if (foundUesrs.length !== 0) return foundUesrs;
+    throw new NotFoundException("Users with given Role  are not found");
   }
 
-  findOne(id: number) {
-    const user = this.users.find((each) => each.id === id);
+  async findOne(id: number) {
+    const user = await this.db.employee.findUnique({
+      where: {
+        id,
+      },
+    });
 
     if (!user) {
       throw new NotFoundException("User with Given Id not found");
@@ -90,26 +46,42 @@ export class UsersService {
     return user;
   }
 
-  delete(id: number) {
-    return this.users.filter((each) => each.id !== id);
-  }
-
-  update(id: number, user: UpdateUserDTO) {
-    this.users.map((each) => (each.id === id ? { ...each, ...user } : each));
+  async delete(id: number) {
+    const foundUser = await this.findOne(id);
+    if (!foundUser) {
+      throw new NotFoundException("User with Given Id not found");
+    }
+    await this.db.employee.delete({
+      where: {
+        id,
+      },
+    });
     return {
-      message: "updated Successfully",
-      user: this.findOne(id),
+      message: "User deleted successfully",
     };
   }
 
-  createUser(user: CreateUserDTO) {
-    this.users.push({
-      ...user,
-      id: 5,
+  async update(id: number, user: Prisma.EmployeeUpdateInput) {
+    await this.db.employee.update({
+      where: {
+        id,
+      },
+      data: user,
     });
-    console.log(user);
+
     return {
-      message: "Successfully Created A user",
+      message: "updated Successfully",
+      user: await this.findOne(id),
+    };
+  }
+
+  async createUser(user: Prisma.EmployeeCreateInput) {
+    const result = await this.db.employee.create({
+      data: user,
+    });
+    return {
+      message: "User created successfully",
+      user: await this.findOne(result.id),
     };
   }
 }

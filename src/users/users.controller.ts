@@ -10,13 +10,20 @@ import {
   Query,
   ValidationPipe,
 } from "@nestjs/common";
-import { CreateUserDTO, UpdateUserDTO } from "./users.dto";
-import { UsersService } from "./users.service";
 
+import { SkipThrottle, Throttle } from "@nestjs/throttler";
+import { Prisma } from "@prisma/client";
+import { UsersService } from "./users.service.js";
+
+// this skips the default throttling for this controller ( and all its routes)
+@SkipThrottle()
 @Controller("users")
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
+  // means it makes throlltling enabled for this route
+  // because we have disabled in controller level.
+  @SkipThrottle({ default: true })
   @Get()
   getUsers(@Query("role") role?: "admin" | "maanger" | "interns" | "engineer") {
     return this.userService.getAllUsers(role);
@@ -27,6 +34,13 @@ export class UsersController {
     return this.userService.findInterns();
   }
 
+  // overwrite this route for defined throllers we have set in the global.
+  @Throttle({
+    short: {
+      limit: 2,
+      ttl: 1000, // 1 second
+    },
+  })
   @Get(":id")
   findOne(@Param("id", ParseIntPipe) id: number) {
     return this.userService.findOne(id);
@@ -36,7 +50,7 @@ export class UsersController {
   updateUser(
     @Param("id", ParseIntPipe) id: number,
     @Body(ValidationPipe)
-    user: UpdateUserDTO,
+    user: Prisma.EmployeeUpdateInput,
   ) {
     return this.userService.update(id, user);
   }
@@ -49,7 +63,7 @@ export class UsersController {
   @Post()
   createUser(
     @Body(ValidationPipe)
-    user: CreateUserDTO,
+    user: Prisma.EmployeeCreateInput,
   ) {
     return this.userService.createUser(user);
   }

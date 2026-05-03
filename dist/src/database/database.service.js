@@ -9,27 +9,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AppController = void 0;
+exports.DatabaseService = void 0;
 const common_1 = require("@nestjs/common");
-const app_service_js_1 = require("./app.service.js");
-let AppController = class AppController {
-    appService;
-    constructor(appService) {
-        this.appService = appService;
-    }
-    getHello() {
-        return this.appService.getHello();
+const adapter_pg_1 = require("@prisma/adapter-pg");
+const client_1 = require("@prisma/client");
+let DatabaseService = class DatabaseService extends client_1.PrismaClient {
+    constructor() {
+        const adapter = new adapter_pg_1.PrismaPg({
+            connectionString: process.env.DATABASE_URL,
+        });
+        super({ adapter });
     }
 };
-exports.AppController = AppController;
-__decorate([
-    (0, common_1.Get)(),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", String)
-], AppController.prototype, "getHello", null);
-exports.AppController = AppController = __decorate([
-    (0, common_1.Controller)(),
-    __metadata("design:paramtypes", [app_service_js_1.AppService])
-], AppController);
-//# sourceMappingURL=app.controller.js.map
+exports.DatabaseService = DatabaseService;
+exports.DatabaseService = DatabaseService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [])
+], DatabaseService);
+//# sourceMappingURL=database.service.js.map

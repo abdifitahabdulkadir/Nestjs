@@ -5,114 +5,95 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
+const database_service_1 = require("../database/database.service");
 let UsersService = class UsersService {
-    users = [
-        {
-            id: 1,
-            name: "Amina Yusuf",
-            email: "amina.yusuf@example.com",
-            role: "admin",
-        },
-        {
-            id: 2,
-            name: "Daniel Kim",
-            email: "daniel.kim@example.com",
-            role: "engineer",
-        },
-        {
-            id: 3,
-            name: "Sophia Martinez",
-            email: "sophia.martinez@example.com",
-            role: "manager",
-        },
-        {
-            id: 4,
-            name: "Omar Hassan",
-            email: "omar.hassan@example.com",
-            role: "engineer",
-        },
-        {
-            id: 5,
-            name: "Priya Nair",
-            email: "priya.nair@example.com",
-            role: "admin",
-        },
-        {
-            id: 6,
-            name: "Ethan Brown",
-            email: "ethan.brown@example.com",
-            role: "manager",
-        },
-        {
-            id: 7,
-            name: "Linh Nguyen",
-            email: "linh.nguyen@example.com",
-            role: "interns",
-        },
-        {
-            id: 8,
-            name: "Grace Okafor",
-            email: "grace.okafor@example.com",
-            role: "manager",
-        },
-        {
-            id: 9,
-            name: "Noah Wilson",
-            email: "noah.wilson@example.com",
-            role: "interns",
-        },
-        {
-            id: 10,
-            name: "Fatima Ali",
-            email: "fatima.ali@example.com",
-            role: "admin",
-        },
-    ];
-    getAllUsers(role) {
-        if (role) {
-            const foundUesrs = this.users.filter((eachUser) => eachUser.role === role);
-            if (foundUesrs.length !== 0)
-                return foundUesrs;
-            throw new common_1.NotFoundException("Users with given Role  are not found");
-        }
-        return this.users;
+    db;
+    constructor(db) {
+        this.db = db;
     }
-    findInterns() {
-        return this.users.filter((eachUser) => eachUser.role === "interns");
+    async getAllUsers(role) {
+        const foundUesrs = await this.db.employee.findMany({
+            where: {
+                ...(role && { role: role }),
+                role: role,
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+            },
+        });
+        if (foundUesrs.length !== 0)
+            return foundUesrs;
+        throw new common_1.NotFoundException("Users with given Role  are not found");
     }
-    findOne(id) {
-        const user = this.users.find((each) => each.id === id);
+    async findInterns() {
+        const foundUesrs = await this.db.employee.findMany({
+            where: {
+                role: "interns",
+            },
+        });
+        if (foundUesrs.length !== 0)
+            return foundUesrs;
+        throw new common_1.NotFoundException("Users with given Role  are not found");
+    }
+    async findOne(id) {
+        const user = await this.db.employee.findUnique({
+            where: {
+                id,
+            },
+        });
         if (!user) {
             throw new common_1.NotFoundException("User with Given Id not found");
         }
         return user;
     }
-    delete(id) {
-        return this.users.filter((each) => each.id !== id);
-    }
-    update(id, user) {
-        this.users.map((each) => (each.id === id ? { ...each, ...user } : each));
+    async delete(id) {
+        const foundUser = await this.findOne(id);
+        if (!foundUser) {
+            throw new common_1.NotFoundException("User with Given Id not found");
+        }
+        await this.db.employee.delete({
+            where: {
+                id,
+            },
+        });
         return {
-            message: "updated Successfully",
-            user: this.findOne(id),
+            message: "User deleted successfully",
         };
     }
-    createUser(user) {
-        this.users.push({
-            ...user,
-            id: 5,
+    async update(id, user) {
+        await this.db.employee.update({
+            where: {
+                id,
+            },
+            data: user,
         });
-        console.log(user);
         return {
-            message: "Successfully Created A user",
+            message: "updated Successfully",
+            user: await this.findOne(id),
+        };
+    }
+    async createUser(user) {
+        const result = await this.db.employee.create({
+            data: user,
+        });
+        return {
+            message: "User created successfully",
+            user: await this.findOne(result.id),
         };
     }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [database_service_1.DatabaseService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map
